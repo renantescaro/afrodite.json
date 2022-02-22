@@ -60,8 +60,7 @@ Informações técnicas: o JSON foi obtido a partir de um web crawler escrito em
 }
 ```
 
-## Importando no MongoDB
-
-```
-mongoimport --db afrodite --collection receitas --file afrodite.json --jsonArray
-```
+# Ideia
+- Criar Api em Python usando FastAPI
+- Swagger documentando os endpoints
+- Endpoint GET recebe ingredientes e retorna lista de receitas
