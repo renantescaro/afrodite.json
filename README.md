@@ -64,3 +64,9 @@ Informações técnicas: o JSON foi obtido a partir de um web crawler escrito em
 - Criar Api em Python usando FastAPI
 - Swagger documentando os endpoints
 - Endpoint GET recebe ingredientes e retorna lista de receitas
+
+
+### Instalar todas as dependências
+* python -m venv venv
+* venv\Scripts\activate.bat
+* pip install -r requirements.txt
