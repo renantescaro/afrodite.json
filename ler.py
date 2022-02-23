@@ -1,6 +1,52 @@
 import json
 from typing import Any, List
 from entidades import Receita, Secao, Conteudo
+from models import ReceitaModel, SecaoModel, ConteudoModel
+from models.banco import session_local
+from models.receita_secao_model import ReceitaSecaoModel
+from models.secao_conteudo_model import SecaoConteudoModel
+
+
+def salvar_receitas():
+    for receita in _montar_receitas():
+        receita_model = ReceitaModel(
+            nome=receita.nome
+        )
+        session_local.add(receita_model)
+        session_local.commit()
+        session_local.refresh(receita_model)
+
+        for secao in receita.secao:
+            secao_model = SecaoModel(
+                nome=secao.nome
+            )
+            session_local.add(secao_model)
+            session_local.commit()
+            session_local.refresh(secao_model)
+
+            receita_secao_model = ReceitaSecaoModel(
+                id_receita=receita_model.id,
+                id_secao=secao_model.id
+            )
+            session_local.add(receita_secao_model)
+            session_local.commit()
+            session_local.refresh(receita_secao_model)
+
+            for conteudo in secao.conteudo:
+                conteudo_model = ConteudoModel(
+                    item=conteudo.item
+                )
+                session_local.add(conteudo_model)
+                session_local.commit()
+                session_local.refresh(conteudo_model)
+
+                secao_conteudo_model = SecaoConteudoModel(
+                    id_conteudo=conteudo_model.id,
+                    id_secao=secao_model.id
+                )
+                session_local.add(secao_conteudo_model)
+                session_local.commit()
+                session_local.refresh(secao_conteudo_model)
 
 
 def _montar_conteudos(conteudos:Any) -> List[Conteudo]:
@@ -25,7 +71,7 @@ def _montar_secoes(secoes:Any) -> List[Secao]:
     return secoes_list
 
 
-def montar_receitas() -> List[Receita]:
+def _montar_receitas() -> List[Receita]:
     receitas_arquivo = open('afrodite.json', encoding='utf8')
     receitas = json.load(receitas_arquivo)
 
@@ -40,11 +86,3 @@ def montar_receitas() -> List[Receita]:
         )
         receitas_list.append(receita_obj)
     return receitas_list
-
-
-for receita in montar_receitas():
-    print(receita.nome)
-    if len(receita.secao[0].conteudo) > 0:
-        print(receita.secao[0].conteudo[0].item)
-
-    print('------------')
