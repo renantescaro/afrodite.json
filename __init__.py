@@ -1,4 +1,4 @@
-from gerar_banco import salvar_receitas
+from services.importar_json import salvar_receitas
 
 
-salvar_receitas()
+# salvar_receitas()
