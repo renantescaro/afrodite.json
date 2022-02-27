@@ -14,4 +14,4 @@
 * Conexão em models/banco.py variavel SQLALCHEMY_DATABASE_URL
 
 ## Importar Json para banco de dados
-> python gerar_banco.py
+> python importar_json.py
