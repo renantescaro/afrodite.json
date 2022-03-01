@@ -4,7 +4,12 @@ from models import (ReceitaSecaoModel, ReceitaModel, SecaoModel, ConteudoModel, 
 
 
 class ReceitaSv:
-    def conteudos_por_receita_id(self, receita_id:int):
+    def lista_todas_receitas(self):
+        query = select(ReceitaModel)
+        return session_local.execute(query).scalars().all()
+
+
+    def lista_receitas_por_id(self, receita_id:int):
         receita = session_local.execute(select(ReceitaModel).where(ReceitaModel.id == receita_id)).one()
         receita_nome = dict(receita)['ReceitaModel'].nome
 
@@ -34,3 +39,18 @@ class ReceitaSv:
             })
 
         return receita_json
+
+
+    def lista_receitas_por_conteudo(self, conteudo:str):
+        query = select(
+            ReceitaModel.id, ReceitaModel.nome, ConteudoModel.item
+        ).join(SecaoConteudoModel).\
+        join(SecaoModel).\
+        join(ReceitaSecaoModel).\
+        join(ReceitaModel).\
+        where(
+            ConteudoModel.item.like('%{}%'.format(conteudo)),
+            SecaoModel.nome == ' ingredientes'
+        ).group_by(ReceitaModel.id)
+
+        return session_local.execute(query).mappings().all()
