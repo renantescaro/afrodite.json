@@ -1,4 +1,6 @@
 
+![Swagger](doc/swagger.png)
+
 # Ideia
 - Criar Api em Python usando FastAPI
 - Swagger documentando os endpoints
