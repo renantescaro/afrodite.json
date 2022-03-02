@@ -7,7 +7,55 @@ from models.receita_secao_model import ReceitaSecaoModel
 from models.secao_conteudo_model import SecaoConteudoModel
 
 
+def _salvar_secoes():
+    secoes_padrao = [
+        {'nome':'Ingredientes', 'id':None},
+        {'nome':'Modo de Preparo', 'id':None},
+        {'nome':'Outras informações', 'id':None},
+    ]
+    for secao in secoes_padrao:
+        secao_model = SecaoModel(
+            nome=secao['nome']
+        )
+        session_local.add(secao_model)
+        session_local.commit()
+        session_local.refresh(secao_model)
+
+        secao['id'] = secao_model.id
+    return secoes_padrao
+
+
+def _id_secao_por_nome(nome_secao:str, secoes_padrao) -> int:
+    if nome_secao == 'Ingredientes':
+        return int(secoes_padrao[0]['id'])
+    elif nome_secao == 'Modo de Preparo':
+        return int(secoes_padrao[1]['id'])
+    elif nome_secao == 'Outras informações':
+        return int(secoes_padrao[2]['id'])
+
+
+def _limpar_texto(texto:str) -> str:
+    texto = texto.lstrip()
+    texto = texto.replace('•', '')
+    texto = texto.replace('-', '')
+    texto = texto.replace('*', '')
+    texto = texto.lstrip()
+    return texto
+
+
+def _texto_valido(texto:str) -> bool:
+    if len(''.join(texto.lstrip())) <= 0:
+        return False
+
+    remover = ['   VEJA TAMBÉM:', '  VEJA TAMBÉM: ', '   CONFIRA TAMBÉM:']
+    if texto in remover:
+        return False
+    return True
+    
+
 def salvar_receitas():
+    secoes_padrao = _salvar_secoes()
+
     for receita in _montar_receitas():
         # salva receita
         receita_model = ReceitaModel(
@@ -18,18 +66,12 @@ def salvar_receitas():
         session_local.refresh(receita_model)
 
         for secao in receita.secao:
-            # salva seção
-            secao_model = SecaoModel(
-                nome=secao.nome
-            )
-            session_local.add(secao_model)
-            session_local.commit()
-            session_local.refresh(secao_model)
+            secao_id = _id_secao_por_nome(secao.nome, secoes_padrao)
 
             # salva receita seção
             receita_secao_model = ReceitaSecaoModel(
                 id_receita=receita_model.id,
-                id_secao=secao_model.id
+                id_secao=secao_id
             )
             session_local.add(receita_secao_model)
             session_local.commit()
@@ -37,21 +79,25 @@ def salvar_receitas():
 
             for conteudo in secao.conteudo:
                 # salva conteúdo
-                conteudo_model = ConteudoModel(
-                    item=conteudo.item
-                )
-                session_local.add(conteudo_model)
-                session_local.commit()
-                session_local.refresh(conteudo_model)
+                
+                if _texto_valido(conteudo.item):
+                    conteudo.item = _limpar_texto(conteudo.item)
 
-                # salva seção conteúdo
-                secao_conteudo_model = SecaoConteudoModel(
-                    id_conteudo=conteudo_model.id,
-                    id_secao=secao_model.id
-                )
-                session_local.add(secao_conteudo_model)
-                session_local.commit()
-                session_local.refresh(secao_conteudo_model)
+                    conteudo_model = ConteudoModel(
+                        item=conteudo.item
+                    )
+                    session_local.add(conteudo_model)
+                    session_local.commit()
+                    session_local.refresh(conteudo_model)
+
+                    # salva seção conteúdo
+                    secao_conteudo_model = SecaoConteudoModel(
+                        id_conteudo=conteudo_model.id,
+                        id_secao=secao_id
+                    )
+                    session_local.add(secao_conteudo_model)
+                    session_local.commit()
+                    session_local.refresh(secao_conteudo_model)
 
 
 def _montar_conteudos(conteudos:Any) -> List[Conteudo]:
@@ -67,9 +113,12 @@ def _montar_conteudos(conteudos:Any) -> List[Conteudo]:
 def _montar_secoes(secoes:Any) -> List[Secao]:
     secoes_list = []
     for secao in secoes:
+        # remove primeiro caracter se este for em branco
+        secao_nome = secao['nome'][1:] if secao['nome'][0] == ' ' else secao['nome']
+
         conteudos_list = _montar_conteudos(secao['conteudo'])
         secao_obj = Secao(
-            nome=secao['nome'],
+            nome=secao_nome,
             conteudo=conteudos_list
         )
         secoes_list.append(secao_obj)
