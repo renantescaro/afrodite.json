@@ -17,3 +17,10 @@
 
 ## Importar Json para banco de dados
 > python importar_json.py
+
+## Iniciar API
+> uvicorn api:app --reload
+
+[Api](http://localhost:8000/)
+
+[Doc](http://localhost:8000/docs#/)
