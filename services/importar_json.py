@@ -36,10 +36,8 @@ def _id_secao_por_nome(nome_secao:str, secoes_padrao) -> int:
 
 def _limpar_texto(texto:str) -> str:
     texto = texto.lstrip()
-    texto = texto.replace('•', '')
-    texto = texto.replace('-', '')
-    texto = texto.replace('*', '')
-    texto = texto.lstrip()
+    if texto[0] in ['•', '·', '–', '-', '*']:
+        return texto[1:].lstrip()
     return texto
 
 
