@@ -124,7 +124,7 @@ def _montar_secoes(secoes:Any) -> List[Secao]:
 
 
 def _montar_receitas() -> List[Receita]:
-    receitas_arquivo = open('afrodite.json', encoding='utf8')
+    receitas_arquivo = open('static/afrodite.json', encoding='utf8')
     receitas = json.load(receitas_arquivo)
 
     receitas_list = []
