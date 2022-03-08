@@ -2,6 +2,14 @@ from typing import List
 from pydantic import BaseModel
 
 
+class Ingrediente(BaseModel):
+    id: int
+    item: str
+
+    class Config:
+	    orm_mode=True
+
+
 class Item(BaseModel):
     secao: str
     conteudo: List[str]
