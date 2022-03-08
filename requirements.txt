@@ -2,4 +2,5 @@ itsdangerous==2.0.1
 SQLAlchemy
 mysqlclient
 fastapi
+fastapi-pagination
 uvicorn
