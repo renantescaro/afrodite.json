@@ -15,6 +15,15 @@ class Item(BaseModel):
     conteudo: List[str]
 
 
+class ItemComReceita(BaseModel):
+    id: int
+    item: str
+    nome: str
+
+    class Config:
+	    orm_mode=True
+
+
 class ReceitaCompleta(BaseModel):
     receita: str
     itens: List[Item]
@@ -26,4 +35,3 @@ class Receita(BaseModel):
 
     class Config:
 	    orm_mode=True
-
