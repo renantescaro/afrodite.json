@@ -33,7 +33,9 @@ create table secao_conteudo(
 	id int not null auto_increment,
     id_conteudo int,
     id_secao int,
+    id_receita int,
     foreign key (id_conteudo) references conteudo (id),
     foreign key (id_secao) references secao (id),
+    foreign key (id_receita) references receita (id),
     primary key(id)
 );
