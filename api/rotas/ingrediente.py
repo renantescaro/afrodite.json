@@ -9,8 +9,8 @@ async def todos_ingredientes():
     return paginate(IngredienteSv().lista_todos_ingredientes())
 
 
-@app.get('/ingredientes/{item}', response_model=Page[Ingrediente], tags=['Ingrediente'])
-async def ingrediente_por_nome(item:str):
+@app.get('/ingredientes/busca/{item}', response_model=Page[Ingrediente], tags=['Ingrediente'])
+async def busca_ingrediente_por_nome(item:str):
     return paginate(IngredienteSv().lista_ingredientes_por_nome(item))
 
 
