@@ -7,4 +7,5 @@ class SecaoConteudoModel(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     id_secao = Column(Integer, ForeignKey('secao.id'))
+    id_receita = Column(Integer, ForeignKey('receita.id'))
     id_conteudo = Column(Integer, ForeignKey('conteudo.id'))
