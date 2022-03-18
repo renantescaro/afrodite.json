@@ -1,10 +1,12 @@
 from api import app
+from fastapi_pagination import Page, paginate, add_pagination
 from services.conteudo_sv import IngredienteSv
 from api.responses import Ingrediente
-from fastapi_pagination import Page, paginate, add_pagination
+from api.pagination import Page as PageCustom
 
 
-@app.get('/ingredientes', response_model=Page[Ingrediente], tags=['Ingrediente'])
+
+@app.get('/ingredientes', response_model=PageCustom[Ingrediente], tags=['Ingrediente'])
 async def todos_ingredientes():
     return paginate(IngredienteSv().lista_todos_ingredientes())
 
