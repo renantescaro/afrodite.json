@@ -5,7 +5,7 @@ from models import (ConteudoModel)
 
 class IngredienteSv:
     def lista_todos_ingredientes(self):
-        query = select(ConteudoModel).limit(100)
+        query = select(ConteudoModel)
         return session_local.execute(query).scalars().all()
 
 
