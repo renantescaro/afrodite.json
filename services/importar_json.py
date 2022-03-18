@@ -1,28 +1,21 @@
-import json
-from typing import Any, List
+from typing import Any, List, Optional
+from sqlalchemy import select
+import logging
 from entidades import Receita, Secao, Conteudo
-from models import ReceitaModel, SecaoModel, ConteudoModel
+from models import ReceitaModel, SecaoModel, ConteudoModel, conteudo_model
 from models.banco import session_local
 from models.receita_secao_model import ReceitaSecaoModel
 from models.secao_conteudo_model import SecaoConteudoModel
+from services.ler_json import LerJson
+
+logging.basicConfig(filename='importar_json.log', encoding='utf-8', level=logging.DEBUG)
 
 
-def _salvar_secoes():
-    secoes_padrao = [
-        {'nome':'Ingredientes', 'id':None},
-        {'nome':'Modo de Preparo', 'id':None},
-        {'nome':'Outras informações', 'id':None},
-    ]
-    for secao in secoes_padrao:
-        secao_model = SecaoModel(
-            nome=secao['nome']
-        )
-        session_local.add(secao_model)
-        session_local.commit()
-        session_local.refresh(secao_model)
-
-        secao['id'] = secao_model.id
-    return secoes_padrao
+def _salvar_bd(model):
+    session_local.add(model)
+    session_local.commit()
+    session_local.refresh(model)
+    return model
 
 
 def _id_secao_por_nome(nome_secao:str, secoes_padrao) -> int:
@@ -35,105 +28,104 @@ def _id_secao_por_nome(nome_secao:str, secoes_padrao) -> int:
 
 
 def _limpar_texto(texto:str) -> str:
+    sujeira = ['•', '·', '–', '-', '*', '**']
     texto = texto.lstrip()
-    if texto[0] in ['•', '·', '–', '-', '*']:
-        return texto[1:].lstrip()
+    logging.info(texto)
+    if texto[0] in sujeira:
+        return texto[2:].lstrip() if texto[1] in sujeira else texto[1:].lstrip()
     return texto
 
 
 def _texto_valido(texto:str) -> bool:
-    if len(''.join(texto.lstrip())) <= 0:
+    texto = ''.join(texto.split())
+    if len(texto) <= 0:
         return False
 
-    remover = ['   VEJA TAMBÉM:', '  VEJA TAMBÉM: ', '   CONFIRA TAMBÉM:']
+    texto = _limpar_texto(texto).lower()
+    remover = [
+        'vejatambém:',
+        'vejatambém:falsopasteldepão',
+        'vejatambém:receitadefarofadoce',
+        'www.facebook.com/enjoycanola',
+        'confiratambém:'
+    ]
     if texto in remover:
         return False
     return True
-    
+
+
+def _salvar_secoes() -> list[dict[str, Any]]:
+    secoes_padrao = [
+        {'nome':'Ingredientes', 'id':None},
+        {'nome':'Modo de Preparo', 'id':None},
+        {'nome':'Outras informações', 'id':None},
+    ]
+    for secao in secoes_padrao:
+        secao_model = SecaoModel(
+            nome=secao['nome']
+        )
+        secao_model = _salvar_bd(secao_model)
+
+        secao['id'] = secao_model.id
+    return secoes_padrao
+
+
+def _salvar_conteudo(conteudo:ConteudoModel) -> Optional[ConteudoModel]:
+    if not _texto_valido(conteudo.item):
+        return None
+
+    conteudo.item = _limpar_texto(conteudo.item)
+    conteudo_busca = session_local.execute(select(ConteudoModel).where(ConteudoModel.item == conteudo.item)).first()
+
+    conteudo_model = None
+    if conteudo_busca is not None:
+        conteudo_model = dict(conteudo_busca)['ConteudoModel']
+
+    if conteudo_model is None:
+        conteudo_model = ConteudoModel(
+            item=conteudo.item
+        )
+        return _salvar_bd(conteudo_model)
+
+
+def _salvar_receita_secao(receita_model:ReceitaModel, secao_id:int) -> ReceitaSecaoModel:
+    receita_secao_model = ReceitaSecaoModel(
+        id_receita=receita_model.id,
+        id_secao=secao_id
+    )
+    return _salvar_bd(receita_secao_model)
+
+
+def _salvar_secao_conteudo(receita_id:int, secao_id:int, conteudo_id:int) -> SecaoConteudoModel:
+    secao_conteudo_model = SecaoConteudoModel(
+        id_conteudo=conteudo_id,
+        id_receita=receita_id,
+        id_secao=secao_id
+    )
+    return _salvar_bd(secao_conteudo_model)
+
 
 def salvar_receitas():
+    receitas = LerJson().ler()
     secoes_padrao = _salvar_secoes()
 
-    for receita in _montar_receitas():
-        # salva receita
+    for receita in receitas:
         receita_model = ReceitaModel(
             nome=receita.nome
         )
-        session_local.add(receita_model)
-        session_local.commit()
-        session_local.refresh(receita_model)
+        receita_model = _salvar_bd(receita_model)
 
         for secao in receita.secao:
             secao_id = _id_secao_por_nome(secao.nome, secoes_padrao)
 
-            # salva receita seção
-            receita_secao_model = ReceitaSecaoModel(
-                id_receita=receita_model.id,
-                id_secao=secao_id
-            )
-            session_local.add(receita_secao_model)
-            session_local.commit()
-            session_local.refresh(receita_secao_model)
+            _salvar_receita_secao(receita_model, secao_id)
 
             for conteudo in secao.conteudo:
-                # salva conteúdo
-                
-                if _texto_valido(conteudo.item):
-                    conteudo.item = _limpar_texto(conteudo.item)
+                conteudo_model = _salvar_conteudo(conteudo)
 
-                    conteudo_model = ConteudoModel(
-                        item=conteudo.item
+                if conteudo_model is not None:
+                    _salvar_secao_conteudo(
+                        receita_id=receita_model.id,
+                        secao_id=secao_id,
+                        conteudo_id=conteudo_model.id
                     )
-                    session_local.add(conteudo_model)
-                    session_local.commit()
-                    session_local.refresh(conteudo_model)
-
-                    # salva seção conteúdo
-                    secao_conteudo_model = SecaoConteudoModel(
-                        id_conteudo=conteudo_model.id,
-                        id_secao=secao_id
-                    )
-                    session_local.add(secao_conteudo_model)
-                    session_local.commit()
-                    session_local.refresh(secao_conteudo_model)
-
-
-def _montar_conteudos(conteudos:Any) -> List[Conteudo]:
-    conteudos_list = []
-    for conteudo in conteudos:
-        conteudo_obj = Conteudo(
-            item=conteudo
-        )
-        conteudos_list.append(conteudo_obj)
-    return conteudos_list
-
-
-def _montar_secoes(secoes:Any) -> List[Secao]:
-    secoes_list = []
-    for secao in secoes:
-        # remove primeiro caracter se este for em branco
-        secao_nome = secao['nome'][1:] if secao['nome'][0] == ' ' else secao['nome']
-
-        conteudos_list = _montar_conteudos(secao['conteudo'])
-        secao_obj = Secao(
-            nome=secao_nome,
-            conteudo=conteudos_list
-        )
-        secoes_list.append(secao_obj)
-    return secoes_list
-
-
-def _montar_receitas() -> List[Receita]:
-    receitas_arquivo = open('static/afrodite.json', encoding='utf8')
-    receitas = json.load(receitas_arquivo)
-
-    receitas_list = []
-    for receita in receitas:
-        secoes_list = _montar_secoes(receita['secao'])
-
-        receita_obj = Receita(
-            nome=receita['nome'],
-            secao=secoes_list
-        )
-        receitas_list.append(receita_obj)
-    return receitas_list
