@@ -17,7 +17,7 @@
 
 ## Configurar
 * Estrutura em static/banco.sql
-* Conexão em models/banco.py variavel SQLALCHEMY_DATABASE_URL
+* Conexão em .env variavel DATABASE_URL
 
 ## Importar Json para banco de dados
 > python importar_json.py
