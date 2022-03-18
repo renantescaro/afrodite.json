@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pb-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Listagem</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/view/static/css/tabulator_bootstrap4.css" rel="stylesheet">
+</head>
+<body>
+    <div id="tblDados"></div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+    <script type="text/javascript" src="/view/static/js/tabulator.min.js"></script>
+    <script>
+        let altura = window.screen.height-135
+        var table  = new Tabulator(
+            "#tblDados", {
+                layout:"fitColumns",
+                placeholder:"No Data Set",
+                pagination:"local",
+                height:altura,
+                paginationSize:15,
+                paginationSizeSelector:[15, 25, 50, 100],
+                movableColumns:true,
+                columns:[
+                    {title:"Id",   field:"id",   width:80,  headerFilter:"input"},
+                    {title:"Item", field:"item", width:800, headerFilter:"input"},
+
+                    // Editar
+                    {title:"", field:"id", width:95,
+                        formatter:function(cell, formatterParams, onRendered){
+                            let a         = document.createElement('a')
+                            a.className   = 'btn btn-primary'
+                            a.textContent = 'Editar'
+                            a.href        = '/veiculo/'+cell.getValue()+'/editar'
+                            return a
+                        }
+                    },
+                ],
+        })
+
+        var get = new XMLHttpRequest()
+
+        get.open("GET", "http://localhost:8000/ingredientes", true)
+        get.send()
+        get.onreadystatechange = function(){
+            if (get.readyState == 4 && get.status == 200){
+                dados = JSON.parse(get.responseText)["items"]
+                table.setData(dados)
+            }
+        }
+    </script>
+</body>
+</html>
