@@ -7,7 +7,6 @@
 - Endpoint GET recebe ingredientes e retorna lista de receitas
 
 # A fazer
-- Criar paginação na API
 - Melhorar fluxo de importação para banco SQL
 
 ### Instalar todas as dependências
