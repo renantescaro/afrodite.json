@@ -10,9 +10,11 @@
 - Melhorar fluxo de importação para banco SQL
 
 ### Instalar todas as dependências
-* python -m venv venv
-* venv\Scripts\activate.bat
-* pip install -r requirements.txt
+> python -m venv venv
+
+> venv\Scripts\activate.bat
+
+> pip install -r requirements.txt
 
 ## Configurar
 * Estrutura em static/banco.sql
