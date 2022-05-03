@@ -22,9 +22,11 @@
 > python importar_json.py
 
 ## Iniciar API
-* > venv\Scripts\activate.bat
-* > uvicorn api:app --reload
+> venv\Scripts\activate.bat
 
-[Api](http://localhost:8000/)
+> uvicorn api:app --reload
 
-[Doc](http://localhost:8000/docs#/)
+
+## Links
+* [Api](http://localhost:8000/)
+* [Doc](http://localhost:8000/docs#/)
